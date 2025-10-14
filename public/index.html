@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhantomPulse - Network Reconnaissance Tool</title>
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #FFD700;
+            --accent-color: #FFA500;
+            --background-color: #1a1a1a;
+            --text-color: #FFD700;
+            --dark-accent: #2b2b2b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .skull-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: block;
+        }
+
+        .main-content {
+            background-color: var(--dark-accent);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--secondary-color);
+            position: relative;
+            z-index: 2;
+        }
+
+        .recon-form {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            background-color: #000000;
+            border: 2px solid var(--secondary-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            color: var(--secondary-color);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            background-color: #111111;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        button::before {
+            content: '>';
+            position: absolute;
+            left: -20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        button:hover::before {
+            left: 10px;
+            opacity: 1;
+        }
+
+        .results-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 6px;
+            background-color: #000000;
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+        }
+
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .location-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .location-label {
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .location-value {
+            color: var(--secondary-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .results-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--secondary-color), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .result-card-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Removing map-related styles */
+
+        .map-label {
+            fill: var(--secondary-color);
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            opacity: 0.7;
+            text-anchor: middle;
+            filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+        }
+
+        .map-paths {
+            filter: drop-shadow(0 0 5px var(--secondary-color));
+        }
+
+        .location-marker {
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        .location-pulse {
+            fill: var(--accent-color);
+            opacity: 0.3;
+            animation: pulse 2s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .map-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-family: 'Courier New', monospace;
+            color: var(--secondary-color);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+        }
+
+        .info-label {
+            color: var(--accent-color);
+            margin-right: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .tech-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--secondary-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .tech-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .tech-name {
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+
+        .tech-type {
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            margin-top: 0.25rem;
+        }
+
+        .result-card {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--secondary-color);
+            border-radius: 6px;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        .result-card .content {
+            color: #ffffff;
+        }
+
+        .vuln-item {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-left: 3px solid;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .vuln-item.severity-high {
+            border-color: #ff4444;
+        }
+
+        .vuln-item.severity-medium {
+            border-color: #ffbb33;
+        }
+
+        .vuln-item.severity-low {
+            border-color: #00C851;
+        }
+
+        .severity {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .no-results {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Cyber Loader Styles */
+        .cyber-loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .cyber-loader.active {
+            display: flex;
+        }
+
+        .loader-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: var(--secondary-color);
+            animation: spin 2s linear infinite;
+            position: relative;
+        }
+
+        .loader-circle::before,
+        .loader-circle::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .loader-circle::before {
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-top-color: var(--accent-color);
+            animation: spin 3s linear infinite;
+        }
+
+        .loader-circle::after {
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border-top-color: var(--secondary-color);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .loader-text {
+            margin-top: 2rem;
+            color: var(--secondary-color);
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .loader-text::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 215, 0, 0.2) 50%,
+                transparent 100%);
+            animation: scan-text 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes scan-text {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .scan-status {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        ul li:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>
+                    <svg class="skull-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="currentColor" d="M50 0C30 0 15 15 15 35c0 15 10 27.5 20 32.5V75c0 5 5 5 5 5h20s5 0 5-5v-7.5c10-5 20-17.5 20-32.5C85 15 70 0 50 0zM35 40c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10zm30 0c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10zM40 85v5c0 5 5 5 5 5h10s5 0 5-5v-5H40z"/>
+                    </svg>
+                    PhantomPulse
+                </h1>
+                <nav>
+                    <!-- Add navigation items here if needed -->
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="cyber-loader" id="cyberLoader">
+            <div class="loader-circle"></div>
+            <div class="loader-text">Initializing Scan Sequence...</div>
+        </div>
+
+        <div class="main-content">
+            <form class="recon-form" id="reconForm">
+                <div class="form-group">
+                    <label for="target">> Target URL:</label>
+                    <input
+                        type="url"
+                        id="target"
+                        name="target"
+                        placeholder="https://target.com"
+                        required
+                    >
+                </div>
+                <button type="submit">Initialize Scan</button>
+            </form>
+
+            <div class="results-section" id="results" style="display: none;">
+                <div class="results-header">
+                    <h2>Scan Results</h2>
+                    <div class="scan-status">Status: <span id="scanStatus">Ready</span></div>
+                </div>
+                <div class="results-grid">
+                    <div class="result-card result-card-full" id="location">
+                        <h3>Target Location</h3>
+                        <div class="content">
+                            <div class="location-section">
+                                <div class="location-info">
+                                    <div class="location-item">
+                                        <span class="location-label">Location:</span>
+                                        <span class="location-value" id="locationText">Analyzing...</span>
+                                    </div>
+                                    <div class="location-item">
+                                        <span class="location-label">Coordinates:</span>
+                                        <span class="location-value" id="coordinatesText">Calculating...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-card" id="vulnerabilities">
+                        <h3>Vulnerabilities</h3>
+                        <div class="content"></div>
+                    </div>
+                    <div class="result-card" id="openPorts">
+                        <h3>Open Ports</h3>
+                        <div class="content"></div>
+                    </div>
+                    <div class="result-card" id="headers">
+                        <h3>Security Headers</h3>
+                        <div class="content"></div>
+                    </div>
+                    <div class="result-card result-card-tech" id="technologies">
+                        <h3>Technologies</h3>
+                        <div class="content">
+                            <div class="tech-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
