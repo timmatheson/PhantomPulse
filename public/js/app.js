@@ -105,11 +105,15 @@ function displayResults(data) {
 
     // This section has been moved up to combine with server info
 
-    // Display web server info
+    // Display web server info and contact info
     const serverContent = document.querySelector('#location .content');
     serverContent.innerHTML = `
         <div class="server-info">
             <p><strong>Server:</strong> ${data.server?.name || 'Unknown'} ${data.server?.version || ''}</p>
+            ${(data.contact && (data.contact.email || data.contact.phone)) ? `
+                <p><strong>Contact Email:</strong> ${data.contact.email || 'Not found'}</p>
+                <p><strong>Contact Phone:</strong> ${data.contact.phone || 'Not found'}</p>
+            ` : ''}
             ${data.location ? `
                 <p><strong>IP:</strong> ${data.location.ip}</p>
                 <p><strong>City:</strong> ${data.location.city}</p>

@@ -37,13 +37,45 @@ class Scanner {
             server: {
                 name: null,
                 version: null
+            },
+            contact: {
+                email: null,
+                phone: null
             }
         };
     }
 
+    async getContactInfo() {
+        // Use whoisjson.com (free, no API key, limited rate)
+        try {
+            const hostname = new URL(this.url).hostname;
+            const baseDomain = hostname.split('.').slice(-2).join('.');
+            const resp = await axios.get(`https://whoisjson.com/api/v1/whois?identifier=${baseDomain}`);
+            const whois = resp.data;
+            let email = null, phone = null;
+            if (whois && whois.contact) {
+                email = whois.contact.email || null;
+                phone = whois.contact.phone || null;
+            } else if (whois && whois.registrant) {
+                email = whois.registrant.email || null;
+                phone = whois.registrant.phone || null;
+            } else if (whois && whois.raw) {
+                // Fallback: try to extract from raw text
+                const raw = Array.isArray(whois.raw) ? whois.raw.join('\n') : whois.raw;
+                const emailMatch = raw.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+                const phoneMatch = raw.match(/\+?\d[\d\s().-]{7,}\d/);
+                email = emailMatch ? emailMatch[0] : null;
+                phone = phoneMatch ? phoneMatch[0] : null;
+            }
+            this.results.contact = { email, phone };
+        } catch (e) {
+            // Ignore errors, leave contact null
+        }
+    }
+
     parseServerHeader(header) {
         if (!header) return null;
-        
+
         // Common server header patterns
         const patterns = {
             apache: /^Apache\/?(\d+[\.\d]*)?/i,
@@ -362,25 +394,28 @@ async function scanTarget(url) {
             timeout: 10000
         });
 
-        // Analyze response headers
-        await scanner.analyzeHeaders(response.headers);
+    // Analyze response headers
+    await scanner.analyzeHeaders(response.headers);
 
-        // Scan common ports
-        await scanner.scanPorts();
+    // Scan common ports
+    await scanner.scanPorts();
 
-        // Check for common vulnerabilities in the HTML
-        await scanner.checkCommonVulnerabilities(response.data);
+    // Check for common vulnerabilities in the HTML
+    await scanner.checkCommonVulnerabilities(response.data);
 
-        // Get location information
-        await scanner.getLocationInfo();
+    // Get location information
+    await scanner.getLocationInfo();
 
-        // Check SSL certificate
-        await scanner.checkSSL();
+    // Check SSL certificate
+    await scanner.checkSSL();
 
-        // Find subdomains
-        await scanner.findSubdomains();
+    // Find subdomains
+    await scanner.findSubdomains();
 
-        return scanner.results;
+    // Get contact info
+    await scanner.getContactInfo();
+
+    return scanner.results;
 
     } catch (error) {
         console.error('Scan error:', error);
